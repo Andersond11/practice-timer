@@ -1,6 +1,6 @@
 import type { SessionItem, ThemeColors } from '../../types';
 import { CIRCLE_RADIUS, CIRCLE_CIRCUMFERENCE } from '../../constants';
-import { isBreak, fmt } from '../../helpers';
+import { isBreak, fmt, formatDuration } from '../../helpers';
 import { el } from '../dom-helpers';
 import { svg } from '../dom-helpers';
 
@@ -9,7 +9,7 @@ export function renderCircleTimer(
   currentItem: SessionItem | null,
   C: ThemeColors,
 ): HTMLElement {
-  const totalSecs = currentItem ? currentItem.minutes * 60 : 0;
+  const totalSecs = currentItem ? currentItem.seconds : 0;
   const pct = totalSecs > 0 ? timeLeft / totalSecs : 0;
   const offset = CIRCLE_CIRCUMFERENCE * (1 - pct);
   const arcColor = currentItem && isBreak(currentItem.name) ? C.brk : C.accent;
@@ -54,7 +54,7 @@ export function renderCircleTimer(
       }, fmt(timeLeft)),
       currentItem
         ? el('div', { style: { fontSize: '11px', color: C.muted, marginTop: '3px' } },
-            `${currentItem.minutes} min`)
+            formatDuration(currentItem.seconds))
         : null,
     ),
   );

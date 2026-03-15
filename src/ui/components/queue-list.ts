@@ -1,5 +1,5 @@
 import type { SessionItem, ThemeColors } from '../../types';
-import { isBreak } from '../../helpers';
+import { isBreak, formatDuration } from '../../helpers';
 import { el } from '../dom-helpers';
 
 export function renderQueueList(
@@ -31,7 +31,7 @@ export function renderQueueList(
       el('div', {
         style: { flex: '1', fontSize: '14px', color: isBreak(item.name) ? C.brk : C.text },
       }, item.name),
-      el('div', { style: { fontSize: '12px', color: C.muted } }, `${item.minutes}m`),
+      el('div', { style: { fontSize: '12px', color: C.muted } }, formatDuration(item.seconds)),
     );
   });
 

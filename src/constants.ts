@@ -12,13 +12,13 @@ export const C: ThemeColors = {
 };
 
 export const DEFAULT_TEMPLATE: TemplateItem[] = [
-  { name: 'Tone work — flute', minutes: 10 },
-  { name: 'Tone work — sax', minutes: 10 },
-  { name: 'Major scales', minutes: 15 },
-  { name: 'Break', minutes: 5 },
-  { name: 'Standard — head & changes', minutes: 20 },
-  { name: 'Break', minutes: 5 },
-  { name: 'Free improv', minutes: 15 },
+  { name: 'Tone work — flute', seconds: 600 },
+  { name: 'Tone work — sax', seconds: 600 },
+  { name: 'Major scales', seconds: 900 },
+  { name: 'Break', seconds: 300 },
+  { name: 'Standard — head & changes', seconds: 1200 },
+  { name: 'Break', seconds: 300 },
+  { name: 'Free improv', seconds: 900 },
 ];
 
 /** SVG circle radius for the timer ring. */

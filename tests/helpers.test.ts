@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { pad, todayStr, todayFname, isBreak, fmt } from '../src/helpers';
+import { pad, todayStr, todayFname, isBreak, fmt, parseDuration, formatDuration, formatDurationTag } from '../src/helpers';
 
 describe('pad', () => {
   it('pads single digits', () => {
@@ -33,10 +33,10 @@ describe('todayStr', () => {
 describe('todayFname', () => {
   afterEach(() => vi.useRealTimers());
 
-  it('returns a Practice markdown filename with date', () => {
+  it('returns a date-based markdown filename', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2025, 2, 15));
-    expect(todayFname()).toBe('Practice - 2025-03-15.md');
+    expect(todayFname()).toBe('2025-03-15.md');
   });
 });
 
@@ -71,5 +71,66 @@ describe('fmt', () => {
   it('formats mixed minutes and seconds', () => {
     expect(fmt(90)).toBe('1:30');
     expect(fmt(3661)).toBe('61:01');
+  });
+});
+
+describe('parseDuration', () => {
+  it('parses bare numbers as minutes', () => {
+    expect(parseDuration('10')).toBe(600);
+    expect(parseDuration('1')).toBe(60);
+  });
+
+  it('parses minutes with m suffix', () => {
+    expect(parseDuration('10m')).toBe(600);
+    expect(parseDuration('1m')).toBe(60);
+  });
+
+  it('parses seconds with s suffix', () => {
+    expect(parseDuration('30s')).toBe(30);
+    expect(parseDuration('10s')).toBe(10);
+  });
+
+  it('parses compound durations', () => {
+    expect(parseDuration('1m 30s')).toBe(90);
+    expect(parseDuration('2m 15s')).toBe(135);
+    expect(parseDuration('1m30s')).toBe(90);
+  });
+
+  it('returns null for invalid input', () => {
+    expect(parseDuration('abc')).toBeNull();
+    expect(parseDuration('')).toBeNull();
+    expect(parseDuration('10x')).toBeNull();
+  });
+});
+
+describe('formatDuration', () => {
+  it('formats whole minutes', () => {
+    expect(formatDuration(600)).toBe('10m');
+    expect(formatDuration(60)).toBe('1m');
+  });
+
+  it('formats seconds only', () => {
+    expect(formatDuration(30)).toBe('30s');
+    expect(formatDuration(10)).toBe('10s');
+  });
+
+  it('formats compound durations', () => {
+    expect(formatDuration(90)).toBe('1m 30s');
+    expect(formatDuration(135)).toBe('2m 15s');
+  });
+});
+
+describe('formatDurationTag', () => {
+  it('formats whole minutes as bare number', () => {
+    expect(formatDurationTag(600)).toBe('10');
+    expect(formatDurationTag(60)).toBe('1');
+  });
+
+  it('formats seconds only with s suffix', () => {
+    expect(formatDurationTag(30)).toBe('30s');
+  });
+
+  it('formats compound durations', () => {
+    expect(formatDurationTag(90)).toBe('1m 30s');
   });
 });

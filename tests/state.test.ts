@@ -3,7 +3,7 @@ import { createInitialState, applyPatch } from '../src/state';
 
 describe('createInitialState', () => {
   it('returns a valid initial state', () => {
-    const template = [{ name: 'Scales', minutes: 15 }];
+    const template = [{ name: 'Scales', seconds: 15 }];
     const state = createInitialState(template);
     expect(state.screen).toBe('connect');
     expect(state.items).toEqual([]);
@@ -17,16 +17,16 @@ describe('createInitialState', () => {
   });
 
   it('copies the template array (no shared reference)', () => {
-    const template = [{ name: 'Scales', minutes: 15 }];
+    const template = [{ name: 'Scales', seconds: 15 }];
     const state = createInitialState(template);
-    template.push({ name: 'Break', minutes: 5 });
+    template.push({ name: 'Break', seconds: 5 });
     expect(state.template).toHaveLength(1);
   });
 });
 
 describe('applyPatch', () => {
   it('merges patch into state', () => {
-    const template = [{ name: 'Scales', minutes: 15 }];
+    const template = [{ name: 'Scales', seconds: 15 }];
     const state = createInitialState(template);
     const next = applyPatch(state, { screen: 'session', running: true });
     expect(next.screen).toBe('session');

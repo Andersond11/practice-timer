@@ -1,4 +1,5 @@
 import type { AppState, AppActions, ThemeColors } from '../../types';
+import { formatDuration } from '../../helpers';
 import { el } from '../dom-helpers';
 
 export function renderDoneScreen(state: AppState, actions: AppActions, C: ThemeColors): HTMLElement {
@@ -12,7 +13,7 @@ export function renderDoneScreen(state: AppState, actions: AppActions, C: ThemeC
     },
       el('span', { style: { color: C.done, fontSize: '13px' } }, '✓'),
       el('span', { style: { fontSize: '14px', flex: '1' } }, item.name),
-      el('span', { style: { fontSize: '12px', color: C.muted } }, `${item.minutes}m`),
+      el('span', { style: { fontSize: '12px', color: C.muted } }, formatDuration(item.seconds)),
     )
   );
 

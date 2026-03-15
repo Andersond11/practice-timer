@@ -3,8 +3,8 @@ import { el } from '../dom-helpers';
 
 export function renderProgressBar(state: AppState, C: ThemeColors): HTMLElement {
   const sessionPct = state.items.length
-    ? state.items.filter(i => i.done).reduce((a, i) => a + i.minutes, 0) /
-      state.items.reduce((a, i) => a + i.minutes, 0)
+    ? state.items.filter(i => i.done).reduce((a, i) => a + i.seconds, 0) /
+      state.items.reduce((a, i) => a + i.seconds, 0)
     : 0;
 
   return el('div', { style: { width: '100%', maxWidth: '440px', padding: '8px 20px 0' } },

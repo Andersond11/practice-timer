@@ -1,7 +1,7 @@
 /** An item in the reusable practice template. */
 export interface TemplateItem {
   name: string;
-  minutes: number;
+  seconds: number;
 }
 
 /** A practice item during an active session. */

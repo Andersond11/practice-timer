@@ -107,7 +107,7 @@ export class PracticeTimerApp {
     if (first >= 0) {
       this.setState({
         items, curIdx: first,
-        timeLeft: items[first].minutes * 60,
+        timeLeft: items[first].seconds,
         screen: 'session', running: false,
       });
     } else {
@@ -147,7 +147,7 @@ export class PracticeTimerApp {
     this.timer.stop();
     this.setState({
       running: false,
-      timeLeft: this.state.items[this.state.curIdx].minutes * 60,
+      timeLeft: this.state.items[this.state.curIdx].seconds,
     });
   }
 
@@ -174,7 +174,7 @@ export class PracticeTimerApp {
       this.audio.play(isBreak(newItems[next].name) ? 'breakIn' : 'advance');
       this.setState({
         items: newItems, curIdx: next,
-        timeLeft: newItems[next].minutes * 60,
+        timeLeft: newItems[next].seconds,
       });
     } else {
       this.audio.play('finish');
