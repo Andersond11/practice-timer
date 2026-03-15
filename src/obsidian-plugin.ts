@@ -1,4 +1,4 @@
-import { Plugin, ItemView, WorkspaceLeaf, PluginSettingTab, Setting } from 'obsidian';
+import { Plugin, ItemView, WorkspaceLeaf, PluginSettingTab, Setting, AbstractInputSuggest, type App } from 'obsidian';
 import { PracticeTimerApp } from './app';
 import { ObsidianAdapter } from './platform/obsidian-adapter';
 import { createDomRenderer } from './ui/renderer';
@@ -74,12 +74,81 @@ class PracticeTimerView extends ItemView {
   }
 }
 
+// ── Input suggests ──────────────────────────────────────────────────────────
+
+class FolderSuggest extends AbstractInputSuggest<string> {
+  private onSelect_: (path: string) => void;
+
+  constructor(app: App, inputEl: HTMLInputElement, onSelect: (path: string) => void) {
+    super(app, inputEl);
+    this.onSelect_ = onSelect;
+  }
+
+  getSuggestions(query: string): string[] {
+    const lower = query.toLowerCase();
+    const paths: string[] = [];
+    for (const f of this.app.vault.getAllLoadedFiles()) {
+      if ('children' in f) {
+        const display = f.path || '/';
+        if (display.toLowerCase().includes(lower)) {
+          paths.push(f.path);
+        }
+      }
+    }
+    return paths.sort();
+  }
+
+  renderSuggestion(path: string, el: HTMLElement): void {
+    el.setText(path || '/ (vault root)');
+  }
+
+  selectSuggestion(path: string): void {
+    this.setValue(path);
+    this.onSelect_(path);
+    this.close();
+  }
+}
+
+class FileSuggest extends AbstractInputSuggest<string> {
+  private extension: string;
+  private onSelect_: (path: string) => void;
+
+  constructor(app: App, inputEl: HTMLInputElement, extension: string, onSelect: (path: string) => void) {
+    super(app, inputEl);
+    this.extension = extension;
+    this.onSelect_ = onSelect;
+  }
+
+  getSuggestions(query: string): string[] {
+    const lower = query.toLowerCase();
+    const paths: string[] = [];
+    for (const f of this.app.vault.getAllLoadedFiles()) {
+      if (!('children' in f) && f.path.endsWith(this.extension)) {
+        if (f.path.toLowerCase().includes(lower)) {
+          paths.push(f.path);
+        }
+      }
+    }
+    return paths.sort();
+  }
+
+  renderSuggestion(path: string, el: HTMLElement): void {
+    el.setText(path);
+  }
+
+  selectSuggestion(path: string): void {
+    this.setValue(path);
+    this.onSelect_(path);
+    this.close();
+  }
+}
+
 // ── Settings tab ────────────────────────────────────────────────────────────
 
 class PracticeTimerSettingTab extends PluginSettingTab {
   plugin: PracticeTimerPlugin;
 
-  constructor(app: import('obsidian').App, plugin: PracticeTimerPlugin) {
+  constructor(app: App, plugin: PracticeTimerPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -96,14 +165,15 @@ class PracticeTimerSettingTab extends PluginSettingTab {
         'Folder in your vault where practice logs are stored. ' +
         'Leave empty to be prompted each time.'
       )
-      .addText(text => text
-        .setPlaceholder('e.g. Practice/Journal')
-        .setValue(this.plugin.settings.journalDirectory)
-        .onChange(async (value) => {
-          this.plugin.settings.journalDirectory = value.trim();
+      .addText(text => {
+        text
+          .setPlaceholder('e.g. Practice/Journal')
+          .setValue(this.plugin.settings.journalDirectory);
+        new FolderSuggest(this.app, text.inputEl, async (value) => {
+          this.plugin.settings.journalDirectory = value;
           await this.plugin.saveSettings();
-        })
-      );
+        });
+      });
 
     new Setting(containerEl)
       .setName('Template file')
@@ -111,14 +181,15 @@ class PracticeTimerSettingTab extends PluginSettingTab {
         'Path to a markdown file in your vault to use as the practice template. ' +
         'The file should contain checklist items like "- [ ] Scales (10)".'
       )
-      .addText(text => text
-        .setPlaceholder('e.g. Templates/Practice.md')
-        .setValue(this.plugin.settings.templatePath)
-        .onChange(async (value) => {
-          this.plugin.settings.templatePath = value.trim();
+      .addText(text => {
+        text
+          .setPlaceholder('e.g. Templates/Practice.md')
+          .setValue(this.plugin.settings.templatePath);
+        new FileSuggest(this.app, text.inputEl, '.md', async (value) => {
+          this.plugin.settings.templatePath = value;
           await this.plugin.saveSettings();
-        })
-      );
+        });
+      });
   }
 }
 
