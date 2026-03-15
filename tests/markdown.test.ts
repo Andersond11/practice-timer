@@ -231,6 +231,14 @@ describe('parseItems', () => {
       { name: 'Standard — head & changes', seconds: 1200, done: false },
     ]);
   });
+
+  it('handles items with trailing metadata after duration', () => {
+    const text = '- [ ] Tone — flute (10s) | category: tone\n- [ ] Stretch — neck & shoulders (12s) | category: stretch\n';
+    expect(parseItems(text)).toEqual([
+      { name: 'Tone — flute', seconds: 10, done: false },
+      { name: 'Stretch — neck & shoulders', seconds: 12, done: false },
+    ]);
+  });
 });
 
 describe('applyDone', () => {

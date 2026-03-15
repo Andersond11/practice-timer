@@ -1,8 +1,9 @@
 import type { TemplateItem, SessionItem, Frontmatter } from './types';
 import { parseDuration, formatDurationTag } from './helpers';
 
-/** Regex matching a practice item line, capturing checkbox, name, and duration tag. */
-const ITEM_RE = /^- \[([ x])\] (.+?) \(([^)]+)\)\s*$/;
+/** Regex matching a practice item line, capturing checkbox, name, and duration tag.
+ *  Allows trailing content after the duration (e.g., "| category: tone"). */
+const ITEM_RE = /^- \[([ x])\] (.+?) \(([^)]+)\)(.*)$/;
 
 /** Build a YAML frontmatter block from a Frontmatter object. */
 export function buildFrontmatter(fm: Frontmatter): string {
