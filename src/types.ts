@@ -12,6 +12,11 @@ export interface SessionItem extends TemplateItem {
 /** Application screen identifiers. */
 export type Screen = 'connect' | 'session' | 'template' | 'done';
 
+/** Settings stored as YAML frontmatter in the markdown file. */
+export interface Frontmatter {
+  autocontinue?: boolean;
+}
+
 /** Full application state. */
 export interface AppState {
   screen: Screen;
@@ -20,6 +25,7 @@ export interface AppState {
   timeLeft: number;
   running: boolean;
   muted: boolean;
+  autoContinue: boolean;
   template: TemplateItem[];
   tplDraft: string;
   tplErr: string;
@@ -75,6 +81,7 @@ export interface AppActions {
   reset: () => void;
   skip: () => Promise<void>;
   toggleMute: () => void;
+  toggleAutoContinue: () => void;
   openTemplate: () => void;
   saveTemplate: () => Promise<void>;
   updateTplDraft: (text: string) => void;

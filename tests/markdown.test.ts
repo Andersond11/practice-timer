@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildMd, parseItems, applyDone } from '../src/markdown';
+import { buildMd, parseItems, applyDone, parseFrontmatter, setFrontmatterKey } from '../src/markdown';
 
 describe('buildMd', () => {
   it('builds markdown with header, blank line, items, trailing newline', () => {
@@ -28,6 +28,20 @@ describe('buildMd', () => {
     const items = [{ name: 'Exercise', seconds: 90 }];
     const result = buildMd(items, '2025-01-01');
     expect(result).toContain('- [ ] Exercise (1m 30s)');
+  });
+
+  it('includes frontmatter when provided', () => {
+    const items = [{ name: 'Scales', seconds: 600 }];
+    const result = buildMd(items, '2025-03-15', { autocontinue: true });
+    expect(result).toBe(
+      '---\nautocontinue: true\n---\n\n# Practice — 2025-03-15\n\n- [ ] Scales (10)\n'
+    );
+  });
+
+  it('omits frontmatter when not provided', () => {
+    const items = [{ name: 'Scales', seconds: 600 }];
+    const result = buildMd(items, '2025-03-15');
+    expect(result).not.toContain('---');
   });
 });
 
@@ -125,6 +139,51 @@ describe('applyDone', () => {
 
   it('preserves non-item lines', () => {
     const result = applyDone(text, 0);
+    expect(result).toContain('# Practice');
+  });
+});
+
+describe('parseFrontmatter', () => {
+  it('parses autocontinue from frontmatter', () => {
+    const text = '---\nautocontinue: true\n---\n\n# Practice\n';
+    expect(parseFrontmatter(text)).toEqual({ autocontinue: true });
+  });
+
+  it('parses autocontinue false', () => {
+    const text = '---\nautocontinue: false\n---\n\n# Practice\n';
+    expect(parseFrontmatter(text)).toEqual({ autocontinue: false });
+  });
+
+  it('returns empty object when no frontmatter', () => {
+    const text = '# Practice\n\n- [ ] Scales (10)\n';
+    expect(parseFrontmatter(text)).toEqual({});
+  });
+
+  it('ignores unknown keys', () => {
+    const text = '---\nunknown: value\nautocontinue: true\n---\n';
+    expect(parseFrontmatter(text)).toEqual({ autocontinue: true });
+  });
+});
+
+describe('setFrontmatterKey', () => {
+  it('updates an existing key', () => {
+    const text = '---\nautocontinue: false\n---\n\n# Practice\n';
+    const result = setFrontmatterKey(text, 'autocontinue', 'true');
+    expect(result).toContain('autocontinue: true');
+    expect(result).toContain('# Practice');
+  });
+
+  it('adds a new key to existing frontmatter', () => {
+    const text = '---\nother: value\n---\n\n# Practice\n';
+    const result = setFrontmatterKey(text, 'autocontinue', 'true');
+    expect(result).toContain('autocontinue: true');
+    expect(result).toContain('other: value');
+  });
+
+  it('creates frontmatter when none exists', () => {
+    const text = '# Practice\n\n- [ ] Scales (10)\n';
+    const result = setFrontmatterKey(text, 'autocontinue', 'true');
+    expect(result).toMatch(/^---\nautocontinue: true\n---/);
     expect(result).toContain('# Practice');
   });
 });

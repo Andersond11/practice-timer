@@ -16,6 +16,15 @@ export function renderTopBar(state: AppState, actions: AppActions, C: ThemeColor
       el('button', {
         style: {
           background: C.surface, border: `1px solid ${C.border}`,
+          color: state.autoContinue ? C.accent : C.muted,
+          borderRadius: '7px', padding: '5px 10px', fontSize: '13px',
+        },
+        title: state.autoContinue ? 'Auto-continue on' : 'Auto-continue off',
+        onclick: actions.toggleAutoContinue,
+      }, '▶▶'),
+      el('button', {
+        style: {
+          background: C.surface, border: `1px solid ${C.border}`,
           color: state.muted ? C.brk : C.muted,
           borderRadius: '7px', padding: '5px 10px', fontSize: '15px',
         },

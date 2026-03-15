@@ -11,6 +11,7 @@ export function createInitialState(template: TemplateItem[]): AppState {
     timeLeft: 0,
     running: false,
     muted: false,
+    autoContinue: false,
     template: [...template],
     tplDraft: '',
     tplErr: '',

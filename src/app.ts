@@ -4,7 +4,7 @@ import type {
 } from './types';
 import { DEFAULT_TEMPLATE } from './constants';
 import { todayStr, todayFname, isBreak } from './helpers';
-import { buildMd, parseItems, applyDone } from './markdown';
+import { buildMd, parseItems, applyDone, parseFrontmatter, setFrontmatterKey } from './markdown';
 import { parseTemplateDraft, serializeTemplate } from './template';
 import { createInitialState, applyPatch, StatePatch } from './state';
 import { TimerController } from './timer';
@@ -39,6 +39,7 @@ export class PracticeTimerApp {
       reset: () => this.reset(),
       skip: () => this.skip(),
       toggleMute: () => this.toggleMute(),
+      toggleAutoContinue: () => this.toggleAutoContinue(),
       openTemplate: () => this.openTemplate(),
       saveTemplate: () => this.saveTemplate(),
       updateTplDraft: (t: string) => this.updateTplDraft(t),
@@ -95,12 +96,14 @@ export class PracticeTimerApp {
 
     let content = await this.platform.readFile(dir, fname);
     if (content === null) {
-      content = buildMd(this.state.template, todayStr());
+      const fm = this.state.autoContinue ? { autocontinue: true } : undefined;
+      content = buildMd(this.state.template, todayStr(), fm);
       await this.platform.createFile(dir, fname, content);
       this.showToast(`Created ${fname}`);
     }
 
     this.currentMd = content;
+    const fm = parseFrontmatter(content);
     const items = parseItems(content);
     const first = items.findIndex(i => !i.done);
 
@@ -109,9 +112,10 @@ export class PracticeTimerApp {
         items, curIdx: first,
         timeLeft: items[first].seconds,
         screen: 'session', running: false,
+        autoContinue: fm.autocontinue ?? false,
       });
     } else {
-      this.setState({ items, screen: 'done' });
+      this.setState({ items, screen: 'done', autoContinue: fm.autocontinue ?? false });
     }
   }
 
@@ -123,22 +127,26 @@ export class PracticeTimerApp {
 
   // ── Timer controls ─────────────────────────────────────────────────────────
 
+  private startTimer(): void {
+    this.setState({ running: true });
+    this.timer.start(this.state.timeLeft, {
+      onTick: (t) => this.setState({ timeLeft: t }),
+      onWarn60: () => this.audio.play('warn60'),
+      onWarn10: () => this.audio.play('warn10'),
+      onComplete: () => {
+        this.setState({ running: false, timeLeft: 0 });
+        setTimeout(() => this.advance(), 80);
+      },
+    });
+  }
+
   private toggleRun(): void {
     if (this.state.curIdx === null) return;
     if (this.state.running) {
       this.timer.stop();
       this.setState({ running: false });
     } else {
-      this.setState({ running: true });
-      this.timer.start(this.state.timeLeft, {
-        onTick: (t) => this.setState({ timeLeft: t }),
-        onWarn60: () => this.audio.play('warn60'),
-        onWarn10: () => this.audio.play('warn10'),
-        onComplete: () => {
-          this.setState({ running: false, timeLeft: 0 });
-          setTimeout(() => this.advance(), 80);
-        },
-      });
+      this.startTimer();
     }
   }
 
@@ -176,6 +184,9 @@ export class PracticeTimerApp {
         items: newItems, curIdx: next,
         timeLeft: newItems[next].seconds,
       });
+      if (this.state.autoContinue) {
+        this.startTimer();
+      }
     } else {
       this.audio.play('finish');
       this.setState({ items: newItems, curIdx: null, screen: 'done' });
@@ -188,6 +199,16 @@ export class PracticeTimerApp {
     const muted = !this.state.muted;
     this.audio.muted = muted;
     this.setState({ muted });
+  }
+
+  // ── Auto-continue ──────────────────────────────────────────────────────────
+
+  private async toggleAutoContinue(): Promise<void> {
+    const autoContinue = !this.state.autoContinue;
+    this.setState({ autoContinue });
+    // Persist to frontmatter in the markdown file
+    this.currentMd = setFrontmatterKey(this.currentMd, 'autocontinue', String(autoContinue));
+    await this.writeback(this.currentMd);
   }
 
   // ── Template ───────────────────────────────────────────────────────────────

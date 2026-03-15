@@ -11,6 +11,7 @@ describe('createInitialState', () => {
     expect(state.timeLeft).toBe(0);
     expect(state.running).toBe(false);
     expect(state.muted).toBe(false);
+    expect(state.autoContinue).toBe(false);
     expect(state.template).toEqual(template);
     expect(state.toast).toBeNull();
     expect(state.busy).toBe(false);
