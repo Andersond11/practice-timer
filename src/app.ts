@@ -58,6 +58,22 @@ export class PracticeTimerApp {
     this.render();
   }
 
+  /** Open a directory directly, skipping the picker. Used by Obsidian plugin. */
+  async openDirectory(dir: DirectoryHandle): Promise<void> {
+    this.setState({ busy: true });
+    try {
+      await this.openOrCreate(dir);
+    } catch {
+      this.showToast('Could not open folder');
+    }
+    this.setState({ busy: false });
+  }
+
+  /** Replace the current template. Used when settings provide a template externally. */
+  setTemplate(template: TemplateItem[]): void {
+    this.state = applyPatch(this.state, { template: [...template] });
+  }
+
   // ── State & rendering ──────────────────────────────────────────────────────
 
   private setState(patch: StatePatch): void {
