@@ -3,9 +3,9 @@ import type {
   DirectoryHandle, TemplateItem,
 } from './types';
 import { DEFAULT_TEMPLATE } from './constants';
-import { todayStr, todayFname, isBreak } from './helpers';
+import { todayStr, todayFname, timestampedFname, isBreak } from './helpers';
 import type { Frontmatter } from './types';
-import { buildMd, parseItems, applyDone, parseFrontmatter, setFrontmatterKey } from './markdown';
+import { buildMd, buildQuickMd, parseItems, applyDone, parseFrontmatter, setFrontmatterKey } from './markdown';
 import { parseTemplateDraft, serializeTemplate } from './template';
 import { createInitialState, applyPatch, StatePatch } from './state';
 import { TimerController } from './timer';
@@ -21,6 +21,8 @@ export class PracticeTimerApp {
   private dirHandle: DirectoryHandle | null = null;
   private currentMd = '';
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private quickIntervalId: ReturnType<typeof setInterval> | null = null;
+  private quickFname = '';
 
   readonly actions: AppActions;
 
@@ -48,6 +50,11 @@ export class PracticeTimerApp {
       newSession: () => this.newSession(),
       reloadFile: () => this.reloadFile(),
       updateFrontmatterField: (key: string, value: string) => this.updateFrontmatterField(key, value),
+      startQuickSession: () => this.startQuickSession(),
+      stopQuickItem: () => this.stopQuickItem(),
+      recordQuickItem: (name: string) => this.recordQuickItem(name),
+      startAnotherQuick: () => this.startAnotherQuick(),
+      endQuickSession: () => this.endQuickSession(),
     };
   }
 
@@ -153,10 +160,9 @@ export class PracticeTimerApp {
     }
   }
 
-  private async writeback(content: string): Promise<void> {
+  private async writeback(content: string, fname?: string): Promise<void> {
     if (!this.dirHandle) return;
-    const fname = todayFname();
-    await this.platform.writeFile(this.dirHandle, fname, content);
+    await this.platform.writeFile(this.dirHandle, fname ?? todayFname(), content);
   }
 
   // ── Timer controls ─────────────────────────────────────────────────────────
@@ -325,11 +331,109 @@ export class PracticeTimerApp {
   // ── New session ────────────────────────────────────────────────────────────
 
   private newSession(): void {
+    this.stopQuickTimer();
     this.dirHandle = null;
     this.currentMd = '';
     this.setState({
       screen: 'connect', items: [], curIdx: null,
       timeLeft: 0, running: false,
+      elapsed: 0, quickPrompting: false, quickItems: [],
+    });
+  }
+
+  // ── Quick session ─────────────────────────────────────────────────────────
+
+  private stopQuickTimer(): void {
+    if (this.quickIntervalId !== null) {
+      clearInterval(this.quickIntervalId);
+      this.quickIntervalId = null;
+    }
+  }
+
+  private startQuickTimer(): void {
+    this.stopQuickTimer();
+    this.setState({ elapsed: 0, running: true });
+    this.quickIntervalId = setInterval(() => {
+      this.setState({ elapsed: this.state.elapsed + 1 });
+    }, 1000);
+  }
+
+  private async startQuickSession(): Promise<void> {
+    this.setState({ busy: true });
+    try {
+      const dir = await this.platform.pickDirectory();
+      if (!dir) {
+        this.setState({ busy: false });
+        return;
+      }
+      this.dirHandle = dir;
+      this.quickFname = timestampedFname();
+      this.setState({
+        busy: false,
+        screen: 'quick',
+        fileLabel: this.quickFname,
+        quickItems: [],
+        quickPrompting: false,
+      });
+      this.startQuickTimer();
+    } catch {
+      this.showToast('Could not open vault folder');
+      this.setState({ busy: false });
+    }
+  }
+
+  private stopQuickItem(): void {
+    this.stopQuickTimer();
+    this.setState({ running: false, quickPrompting: true });
+  }
+
+  private recordQuickItem(name: string): void {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const item = { name: trimmed, seconds: this.state.elapsed, done: true };
+    this.audio.play('advance');
+    this.setState({
+      quickItems: [...this.state.quickItems, item],
+      quickPrompting: false,
+      elapsed: 0,
+      running: false,
+    });
+  }
+
+  private startAnotherQuick(): void {
+    this.startQuickTimer();
+  }
+
+  private async endQuickSession(): Promise<void> {
+    this.stopQuickTimer();
+    const items = this.state.quickItems;
+    if (items.length === 0) {
+      this.newSession();
+      return;
+    }
+    const dateStr = todayStr();
+    const totalMinutes = Math.round(items.reduce((a, i) => a + i.seconds, 0) / 60);
+    const fm = {
+      type: 'practice-log',
+      date: dateStr,
+      planned_duration: undefined as number | undefined,
+      actual_duration: totalMinutes,
+      standard: '',
+      transcription: '',
+      energy: null as number | null,
+      tags: ['music/practice'],
+    };
+    const md = buildQuickMd(items, dateStr, fm);
+    await this.platform.createFile(this.dirHandle!, this.quickFname, md);
+    this.currentMd = md;
+    this.audio.play('finish');
+    this.showToast(`Saved ${this.quickFname}`);
+    this.setState({
+      screen: 'done',
+      items,
+      curIdx: null,
+      running: false,
+      frontmatter: parseFrontmatter(md),
     });
   }
 }

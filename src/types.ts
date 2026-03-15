@@ -10,7 +10,7 @@ export interface SessionItem extends TemplateItem {
 }
 
 /** Application screen identifiers. */
-export type Screen = 'connect' | 'session' | 'template' | 'done';
+export type Screen = 'connect' | 'session' | 'template' | 'done' | 'quick';
 
 /** Settings stored as YAML frontmatter in the markdown file. */
 export interface Frontmatter {
@@ -42,6 +42,12 @@ export interface AppState {
   fileLabel: string;
   prevScreen: Screen;
   frontmatter: Frontmatter;
+  /** Elapsed seconds for count-up timer in quick sessions. */
+  elapsed: number;
+  /** Whether the quick session is prompting for item name. */
+  quickPrompting: boolean;
+  /** Accumulated items recorded during a quick session. */
+  quickItems: SessionItem[];
 }
 
 /** Theme color tokens. */
@@ -98,6 +104,16 @@ export interface AppActions {
   newSession: () => void;
   reloadFile: () => Promise<void>;
   updateFrontmatterField: (key: string, value: string) => Promise<void>;
+  /** Start a quick (one-off) session — pick vault then begin. */
+  startQuickSession: () => Promise<void>;
+  /** Stop the current quick-session timer and prompt for item name. */
+  stopQuickItem: () => void;
+  /** Record the item name for the just-timed quick item. */
+  recordQuickItem: (name: string) => void;
+  /** Start another timer within the current quick session. */
+  startAnotherQuick: () => void;
+  /** End the quick session and write the markdown file. */
+  endQuickSession: () => Promise<void>;
 }
 
 /** Render function signature — receives state + actions on every update. */

@@ -35,6 +35,23 @@ export function buildFrontmatter(fm: Frontmatter): string {
   return lines.join('\n');
 }
 
+/** Build a quick-session markdown file from recorded items (all marked done). */
+export function buildQuickMd(items: SessionItem[], dateStr: string, frontmatter?: Frontmatter): string {
+  const parts: string[] = [];
+
+  if (frontmatter && Object.keys(frontmatter).length > 0) {
+    parts.push(buildFrontmatter(frontmatter));
+    parts.push('');
+  }
+
+  parts.push(`# Quick Practice — ${dateStr}`);
+  parts.push('');
+  parts.push(...items.map(i => `- [x] ${i.name} (${formatDurationTag(i.seconds)})`));
+  parts.push('');
+
+  return parts.join('\n');
+}
+
 /** Build a practice markdown file from template items, a date string, and frontmatter. */
 export function buildMd(items: TemplateItem[], dateStr: string, frontmatter?: Frontmatter): string {
   const parts: string[] = [];

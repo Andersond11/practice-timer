@@ -23,7 +23,15 @@ export function renderConnectScreen(state: AppState, actions: AppActions, C: The
       },
       disabled: state.busy,
       onclick: actions.connectVault,
-    }, state.busy ? 'Connecting…' : 'Open Vault Folder'),
+    }, state.busy ? 'Connecting…' : 'Planned Session'),
+    el('button', {
+      style: {
+        background: C.surface, color: C.text, border: `1px solid ${C.border}`,
+        borderRadius: '10px', padding: '10px 26px', fontSize: '14px', fontWeight: '500',
+      },
+      disabled: state.busy,
+      onclick: actions.startQuickSession,
+    }, 'Quick Session'),
     el('div', { style: { fontSize: '11px', color: C.muted } },
       'Chrome / Edge · File System Access API · vault is read+write'),
   );

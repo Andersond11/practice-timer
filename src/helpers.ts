@@ -10,6 +10,12 @@ export function todayStr(): string {
 /** Today's practice filename. */
 export const todayFname = (): string => `${todayStr()}.md`;
 
+/** Timestamped practice filename for quick sessions: YYYY-MM-DD_HHmmss.md */
+export function timestampedFname(): string {
+  const d = new Date();
+  return `${todayStr()}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.md`;
+}
+
 /** Whether an item name represents a break. */
 export const isBreak = (name: string): boolean => /break/i.test(name);
 

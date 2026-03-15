@@ -20,6 +20,9 @@ export function createInitialState(template: TemplateItem[]): AppState {
     fileLabel: '',
     prevScreen: 'connect',
     frontmatter: {},
+    elapsed: 0,
+    quickPrompting: false,
+    quickItems: [],
   };
 }
 

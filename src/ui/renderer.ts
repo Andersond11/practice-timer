@@ -7,13 +7,14 @@ import { renderConnectScreen } from './screens/connect-screen';
 import { renderSessionScreen } from './screens/session-screen';
 import { renderDoneScreen } from './screens/done-screen';
 import { renderTemplateScreen } from './screens/template-screen';
+import { renderQuickScreen } from './screens/quick-screen';
 
 /** Create a DOM renderer bound to a container element. */
 export function createDomRenderer(container: HTMLElement): RenderFn {
   return (state: AppState, actions: AppActions) => {
     const topBar = renderTopBar(state, actions, C);
 
-    const showProgress = state.screen === 'session' || state.screen === 'done';
+    const showProgress = state.screen === 'session' || state.screen === 'done' || state.screen === 'quick';
     const progressBar = showProgress ? renderProgressBar(state, C) : null;
 
     let screen: HTMLElement;
@@ -29,6 +30,9 @@ export function createDomRenderer(container: HTMLElement): RenderFn {
         break;
       case 'template':
         screen = renderTemplateScreen(state, actions, C);
+        break;
+      case 'quick':
+        screen = renderQuickScreen(state, actions, C);
         break;
     }
 
