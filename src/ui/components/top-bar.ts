@@ -13,6 +13,14 @@ export function renderTopBar(state: AppState, actions: AppActions, C: ThemeColor
       style: { fontSize: '12px', color: C.muted, fontFamily: 'monospace', letterSpacing: '0.3px' },
     }, state.fileLabel || 'practice timer'),
     el('div', { style: { display: 'flex', gap: '8px' } },
+      state.fileLabel ? el('button', {
+        style: {
+          background: C.surface, border: `1px solid ${C.border}`, color: C.muted,
+          borderRadius: '7px', padding: '5px 10px', fontSize: '13px',
+        },
+        title: 'Reload file from disk',
+        onclick: actions.reloadFile,
+      }, '↻') : null,
       el('button', {
         style: {
           background: C.surface, border: `1px solid ${C.border}`,

@@ -19,6 +19,7 @@ export function createInitialState(template: TemplateItem[]): AppState {
     busy: false,
     fileLabel: '',
     prevScreen: 'connect',
+    frontmatter: {},
   };
 }
 

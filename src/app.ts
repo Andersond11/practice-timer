@@ -46,6 +46,8 @@ export class PracticeTimerApp {
       updateTplDraft: (t: string) => this.updateTplDraft(t),
       cancelTemplate: () => this.cancelTemplate(),
       newSession: () => this.newSession(),
+      reloadFile: () => this.reloadFile(),
+      updateFrontmatterField: (key: string, value: string) => this.updateFrontmatterField(key, value),
     };
   }
 
@@ -128,9 +130,10 @@ export class PracticeTimerApp {
         timeLeft: items[first].seconds,
         screen: 'session', running: false,
         autoContinue: fm.autocontinue ?? false,
+        frontmatter: fm,
       });
     } else {
-      this.setState({ items, screen: 'done', autoContinue: fm.autocontinue ?? false });
+      this.setState({ items, screen: 'done', autoContinue: fm.autocontinue ?? false, frontmatter: fm });
     }
   }
 
@@ -265,6 +268,42 @@ export class PracticeTimerApp {
 
   private cancelTemplate(): void {
     this.setState({ screen: this.state.prevScreen });
+  }
+
+  // ── Reload & edit ─────────────────────────────────────────────────────────
+
+  private async reloadFile(): Promise<void> {
+    if (!this.dirHandle) return;
+    const fname = todayFname();
+    const content = await this.platform.readFile(this.dirHandle, fname);
+    if (content === null) {
+      this.showToast('File not found');
+      return;
+    }
+    this.currentMd = content;
+    const fm = parseFrontmatter(content);
+    const items = parseItems(content);
+    const first = items.findIndex(i => !i.done);
+
+    if (first >= 0) {
+      this.setState({
+        items, curIdx: first,
+        timeLeft: items[first].seconds,
+        screen: 'session', running: false,
+        autoContinue: fm.autocontinue ?? false,
+        frontmatter: fm,
+      });
+    } else {
+      this.setState({ items, screen: 'done', autoContinue: fm.autocontinue ?? false, frontmatter: fm });
+    }
+    this.showToast('Reloaded from file');
+  }
+
+  private async updateFrontmatterField(key: string, value: string): Promise<void> {
+    this.currentMd = setFrontmatterKey(this.currentMd, key, value);
+    await this.writeback(this.currentMd);
+    const fm = parseFrontmatter(this.currentMd);
+    this.setState({ frontmatter: fm });
   }
 
   // ── New session ────────────────────────────────────────────────────────────

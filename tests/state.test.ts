@@ -15,6 +15,7 @@ describe('createInitialState', () => {
     expect(state.template).toEqual(template);
     expect(state.toast).toBeNull();
     expect(state.busy).toBe(false);
+    expect(state.frontmatter).toEqual({});
   });
 
   it('copies the template array (no shared reference)', () => {

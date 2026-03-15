@@ -41,6 +41,7 @@ export interface AppState {
   busy: boolean;
   fileLabel: string;
   prevScreen: Screen;
+  frontmatter: Frontmatter;
 }
 
 /** Theme color tokens. */
@@ -95,6 +96,8 @@ export interface AppActions {
   updateTplDraft: (text: string) => void;
   cancelTemplate: () => void;
   newSession: () => void;
+  reloadFile: () => Promise<void>;
+  updateFrontmatterField: (key: string, value: string) => Promise<void>;
 }
 
 /** Render function signature — receives state + actions on every update. */
