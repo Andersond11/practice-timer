@@ -47,8 +47,9 @@ class PracticeTimerView extends ItemView {
 
   async onOpen(): Promise<void> {
     this.contentEl.addClass('practice-timer-root');
+    await this.timerApp.init();
 
-    // Load template from vault file if configured
+    // Load template from vault file (after init, so it takes priority)
     const { templatePath, journalDirectory } = this.plugin.settings;
     if (templatePath) {
       const file = this.app.vault.getFileByPath(templatePath);
@@ -60,8 +61,6 @@ class PracticeTimerView extends ItemView {
         }
       }
     }
-
-    await this.timerApp.init();
 
     // If journal directory is configured, skip the connect screen
     if (journalDirectory) {
