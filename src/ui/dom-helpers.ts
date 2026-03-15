@@ -10,6 +10,10 @@ export function el(tag: string, attrs: Attrs, ...children: Child[]): HTMLElement
         Object.assign(e.style, v);
       } else if (k.startsWith('on')) {
         e.addEventListener(k.slice(2).toLowerCase(), v);
+      } else if (v === false || v == null) {
+        e.removeAttribute(k);
+      } else if (v === true) {
+        e.setAttribute(k, '');
       } else {
         e.setAttribute(k, v);
       }
