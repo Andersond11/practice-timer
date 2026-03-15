@@ -2,20 +2,19 @@ import { Plugin, ItemView, WorkspaceLeaf, PluginSettingTab, Setting } from 'obsi
 import { PracticeTimerApp } from './app';
 import { ObsidianAdapter } from './platform/obsidian-adapter';
 import { createDomRenderer } from './ui/renderer';
-import { parseTemplateDraft, serializeTemplate } from './template';
-import { DEFAULT_TEMPLATE } from './constants';
+import { parseItems } from './markdown';
 import type { DirectoryHandle } from './types';
 
 const VIEW_TYPE = 'practice-timer';
 
 interface PracticeTimerSettings {
   journalDirectory: string;
-  templateText: string;
+  templatePath: string;
 }
 
 const DEFAULT_SETTINGS: PracticeTimerSettings = {
   journalDirectory: '',
-  templateText: serializeTemplate(DEFAULT_TEMPLATE),
+  templatePath: '',
 };
 
 // ── View ────────────────────────────────────────────────────────────────────
@@ -49,19 +48,24 @@ class PracticeTimerView extends ItemView {
   async onOpen(): Promise<void> {
     this.contentEl.addClass('practice-timer-root');
 
-    // Apply template from settings
-    const settings = this.plugin.settings;
-    const result = parseTemplateDraft(settings.templateText);
-    if (result.ok && result.items.length > 0) {
-      this.timerApp.setTemplate(result.items);
+    // Load template from vault file if configured
+    const { templatePath, journalDirectory } = this.plugin.settings;
+    if (templatePath) {
+      const file = this.app.vault.getFileByPath(templatePath);
+      if (file) {
+        const content = await this.app.vault.read(file);
+        const items = parseItems(content);
+        if (items.length > 0) {
+          this.timerApp.setTemplate(items.map(i => ({ name: i.name, seconds: i.seconds })));
+        }
+      }
     }
 
     await this.timerApp.init();
 
     // If journal directory is configured, skip the connect screen
-    if (settings.journalDirectory) {
-      const dir = settings.journalDirectory as DirectoryHandle;
-      await this.timerApp.openDirectory(dir);
+    if (journalDirectory) {
+      await this.timerApp.openDirectory(journalDirectory as DirectoryHandle);
     }
   }
 
@@ -86,8 +90,6 @@ class PracticeTimerSettingTab extends PluginSettingTab {
 
     containerEl.createEl('h2', { text: 'Practice Timer Settings' });
 
-    // ── Journal directory ─────────────────────────────────────────────────
-
     new Setting(containerEl)
       .setName('Journal directory')
       .setDesc(
@@ -103,24 +105,20 @@ class PracticeTimerSettingTab extends PluginSettingTab {
         })
       );
 
-    // ── Template ──────────────────────────────────────────────────────────
-
     new Setting(containerEl)
-      .setName('Practice template')
-      .setDesc('One item per line: Name (duration). Durations: 10m, 30s, 1m 30s, or bare number for minutes.')
-      .addTextArea(text => {
-        text
-          .setPlaceholder('Scales (10)\nBreak (5)\nFree improv (15)')
-          .setValue(this.plugin.settings.templateText)
-          .onChange(async (value) => {
-            this.plugin.settings.templateText = value;
-            await this.plugin.saveSettings();
-          });
-        text.inputEl.rows = 10;
-        text.inputEl.cols = 40;
-        text.inputEl.style.fontFamily = 'monospace';
-        text.inputEl.style.fontSize = '13px';
-      });
+      .setName('Template file')
+      .setDesc(
+        'Path to a markdown file in your vault to use as the practice template. ' +
+        'The file should contain checklist items like "- [ ] Scales (10)".'
+      )
+      .addText(text => text
+        .setPlaceholder('e.g. Templates/Practice.md')
+        .setValue(this.plugin.settings.templatePath)
+        .onChange(async (value) => {
+          this.plugin.settings.templatePath = value.trim();
+          await this.plugin.saveSettings();
+        })
+      );
   }
 }
 
