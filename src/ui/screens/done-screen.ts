@@ -79,7 +79,7 @@ export function renderDoneScreen(state: AppState, actions: AppActions, C: ThemeC
       },
     }, ...rows),
     fields,
-    el('div', { style: { display: 'flex', gap: '10px', marginTop: '6px' } },
+    el('div', { style: { display: 'flex', gap: '10px', marginTop: '6px', flexWrap: 'wrap', justifyContent: 'center' } },
       el('button', {
         onclick: actions.reloadFile,
         style: {
@@ -89,6 +89,13 @@ export function renderDoneScreen(state: AppState, actions: AppActions, C: ThemeC
         },
         title: 'Reload markdown from file',
       }, '↻ Reload'),
+      el('button', {
+        onclick: actions.startQuickSession,
+        style: {
+          background: C.accent, color: '#fff', border: 'none', borderRadius: '8px',
+          padding: '10px 22px', fontSize: '14px', fontWeight: '600',
+        },
+      }, 'Quick Session'),
       el('button', {
         onclick: actions.newSession,
         style: {

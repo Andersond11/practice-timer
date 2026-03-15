@@ -21,6 +21,14 @@ export function renderTopBar(state: AppState, actions: AppActions, C: ThemeColor
         title: 'Reload file from disk',
         onclick: actions.reloadFile,
       }, '↻') : null,
+      (state.screen === 'session') ? el('button', {
+        style: {
+          background: C.surface, border: `1px solid ${C.border}`, color: C.accent,
+          borderRadius: '7px', padding: '5px 10px', fontSize: '12px', fontWeight: '600',
+        },
+        title: 'Start a quick session',
+        onclick: actions.startQuickSession,
+      }, '⚡') : null,
       el('button', {
         style: {
           background: C.surface, border: `1px solid ${C.border}`,

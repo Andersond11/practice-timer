@@ -361,12 +361,15 @@ export class PracticeTimerApp {
   private async startQuickSession(): Promise<void> {
     this.setState({ busy: true });
     try {
-      const dir = await this.platform.pickDirectory();
-      if (!dir) {
-        this.setState({ busy: false });
-        return;
+      // Reuse the already-connected vault directory if available
+      if (!this.dirHandle) {
+        const dir = await this.platform.pickDirectory();
+        if (!dir) {
+          this.setState({ busy: false });
+          return;
+        }
+        this.dirHandle = dir;
       }
-      this.dirHandle = dir;
       this.quickFname = timestampedFname();
       this.setState({
         busy: false,
