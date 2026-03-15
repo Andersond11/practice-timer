@@ -14,6 +14,14 @@ export type Screen = 'connect' | 'session' | 'template' | 'done';
 
 /** Settings stored as YAML frontmatter in the markdown file. */
 export interface Frontmatter {
+  type?: string;
+  date?: string;
+  planned_duration?: number;
+  actual_duration?: number | null;
+  standard?: string;
+  transcription?: string;
+  energy?: number | null;
+  tags?: string[];
   autocontinue?: boolean;
 }
 

@@ -4,6 +4,7 @@ import type {
 } from './types';
 import { DEFAULT_TEMPLATE } from './constants';
 import { todayStr, todayFname, isBreak } from './helpers';
+import type { Frontmatter } from './types';
 import { buildMd, parseItems, applyDone, parseFrontmatter, setFrontmatterKey } from './markdown';
 import { parseTemplateDraft, serializeTemplate } from './template';
 import { createInitialState, applyPatch, StatePatch } from './state';
@@ -96,8 +97,22 @@ export class PracticeTimerApp {
 
     let content = await this.platform.readFile(dir, fname);
     if (content === null) {
-      const fm = this.state.autoContinue ? { autocontinue: true } : undefined;
-      content = buildMd(this.state.template, todayStr(), fm);
+      const dateStr = todayStr();
+      const totalMinutes = Math.round(
+        this.state.template.reduce((a, i) => a + i.seconds, 0) / 60
+      );
+      const fm: Frontmatter = {
+        type: 'practice-log',
+        date: dateStr,
+        planned_duration: totalMinutes,
+        actual_duration: null,
+        standard: '',
+        transcription: '',
+        energy: null,
+        tags: ['music/practice'],
+        autocontinue: this.state.autoContinue || undefined,
+      };
+      content = buildMd(this.state.template, dateStr, fm);
       await this.platform.createFile(dir, fname, content);
       this.showToast(`Created ${fname}`);
     }
@@ -189,6 +204,14 @@ export class PracticeTimerApp {
       }
     } else {
       this.audio.play('finish');
+      // Write actual_duration to frontmatter
+      const actualMinutes = Math.round(
+        newItems.filter(i => i.done).reduce((a, i) => a + i.seconds, 0) / 60
+      );
+      this.currentMd = setFrontmatterKey(
+        this.currentMd, 'actual_duration', String(actualMinutes)
+      );
+      await this.writeback(this.currentMd);
       this.setState({ items: newItems, curIdx: null, screen: 'done' });
     }
   }
