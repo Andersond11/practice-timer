@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "build": "node esbuild.config.mjs",
+    "build:standalone": "node esbuild.config.mjs --standalone",
+    "build:obsidian": "node esbuild.config.mjs --obsidian",
     "dev": "node esbuild.config.mjs --watch",
+    "dev:obsidian": "node esbuild.config.mjs --obsidian --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
     "esbuild": "^0.20.0",
+    "obsidian": "^1.12.3",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
   }

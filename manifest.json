@@ -1,0 +1,9 @@
+{
+  "id": "practice-timer",
+  "name": "Practice Timer",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "A practice session timer that creates and tracks progress in markdown files with frontmatter.",
+  "author": "Andersond11",
+  "isDesktopOnly": false
+}
